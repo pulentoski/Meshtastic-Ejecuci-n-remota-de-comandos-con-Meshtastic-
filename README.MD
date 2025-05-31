@@ -8,7 +8,7 @@ Este proyecto permite la ejecución remota de comandos en un sistema Linux utili
 
 ## ✨ Características Principales
 
-* Ejecución segura de comandos remotos mediante red mesh Meshtastic
+* Ejecución de comandos remotos mediante red mesh Meshtastic
 * Transmisión en tiempo real de los resultados (limitado a 200 caracteres)
 * Manejo de errores con indicadores claros de éxito/fallo
 * Registro de logs persistente (en `meshtastic_control.log` y consola)
