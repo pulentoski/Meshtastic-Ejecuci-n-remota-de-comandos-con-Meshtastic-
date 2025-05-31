@@ -1,4 +1,4 @@
-
+l
 
 # Ejecución Remota de Comandos con Meshtastic
 
@@ -61,7 +61,3 @@ Ejemplos:
 ## 📄 Licencia
 
 Este proyecto está bajo licencia MIT. Úsalo bajo tu propio riesgo.
-
-## 🤝 Contribuciones
-
-¡Las contribuciones son bienvenidas! Por favor abre un issue o pull request con tus mejoras.
