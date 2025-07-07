@@ -1,63 +1,100 @@
-l
+# 🚀 Meshtastic Control Script
 
-# Ejecución Remota de Comandos con Meshtastic
+Este repositorio contiene un script en Python para controlar un nodo Meshtastic conectado por USB (o serial) desde una Raspberry Pi (o cualquier Linux). El script permite ejecutar comandos de sistema remotamente a través de mensajes enviados por la red Meshtastic, y responde con el resultado del comando. Ideal para automatización, diagnóstico y administración remota de dispositivos mesh.
 
-## 📌 Descripción
+---
 
-Este proyecto permite la ejecución remota de comandos en un sistema Linux utilizando Meshtastic, un protocolo de red mesh de largo alcance y código abierto. El sistema escucha mensajes de texto con el prefijo `cmd:` y ejecuta el comando subsiguiente en la máquina host, devolviendo el resultado a través de la red Meshtastic.
+## 🛠️ ¿Qué hace este script?
 
-## ✨ Características Principales
+- 📡 **Escucha** mensajes de texto enviados por la red Meshtastic que empiecen con `cmd:`.
+- 🖥️ **Ejecuta** el comando de consola recibido (ejemplo: `cmd:uptime`).
+- 💬 **Responde** por la red Meshtastic con la salida del comando.
+- 🔌 **Detecta automáticamente** el puerto serial del nodo (`/dev/ttyUSB*` o `/dev/ttyACM*`).
+- ⚠️ **Evita errores** si el puerto está ocupado o no hay dispositivos conectados.
+- 📝 **Registra logs** en consola y en el archivo `meshtastic_control.log`.
 
-* Ejecución de comandos remotos mediante red mesh Meshtastic
-* Transmisión en tiempo real de los resultados (limitado a 200 caracteres)
-* Manejo de errores con indicadores claros de éxito/fallo
-* Registro de logs persistente (en `meshtastic_control.log` y consola)
-* Mantiene conectividad inalámbrica durante la operación
+---
 
-## ⚙️ Requisitos
+## ⚙️ Instalación y Primeros Pasos
 
-* Python 3.x
-* Meshtastic (`pip install meshtastic`)
-* Librería PubSub (`pip install pypubsub`)
-* Dispositivo Meshtastic conectado (ej. /dev/ttyUSB0)
-
-## 🚀 Configuración Rápida
-
-1. Instala las dependencias:
+### 1. Clona el repositorio
 
 ```bash
-pip install meshtastic pypubsub
+git clone https://github.com/tuusuario/meshtastic-control.git
+cd meshtastic-control
 ```
 
-2. Conecta tu dispositivo Meshtastic (ej. vía USB)
+### 2. Crea y activa un entorno virtual
 
-3. Ejecuta el script:
+```bash
+python3 -m venv meshtastic_env
+source meshtastic_env/bin/activate
+```
+
+### 3. Actualiza pip y herramientas
+
+```bash
+pip install --upgrade pip setuptools wheel
+```
+
+### 4. Instala dependencias
+
+```bash
+pip install meshtastic pyserial pypubsub
+```
+
+> 💡 **TIP:** Si usas Raspberry Pi y tienes problemas de compilación, prueba:
+> ```bash
+> pip install --no-cache-dir --index-url https://pypi.org/simple meshtastic
+> ```
+
+---
+
+## ▶️ Ejecución del Script
+
+Asegúrate de tener conectado tu nodo Meshtastic por USB.
 
 ```bash
 python3 meshtastic_control.py
 ```
 
-## 📝 Uso
+El script buscará automáticamente el puerto correcto y quedará escuchando mensajes.
 
-Envía comandos con el formato:
+---
+
+## ✉️ Ejemplo de Uso
+
+Desde otro nodo Meshtastic, envía un mensaje de texto con el formato:
 
 ```
-cmd:<tu_comando>
+cmd:ls
+```
+O, por ejemplo:
+```
+cmd:uptime
 ```
 
-Ejemplos:
+El resultado del comando aparecerá como respuesta por la red Meshtastic.
 
-* `cmd:ls -la` - Lista archivos
-* `cmd:df -h` - Muestra espacio en disco
-* `cmd:uptime` - Ver tiempo de actividad del sistema
+---
 
-## ⚠️ Seguridad
+## ⚠️ Notas y Seguridad
 
-* ADVERTENCIA: Este script ejecuta comandos directamente en el sistema
-* Recomendado solo para redes Mesh privadas/seguras
-* Considera implementar autenticación adicional
-* Limita el acceso a nodos de confianza
+- ❗ **¡Cuidado!** Cualquier usuario de la red mesh que conozca este formato podrá ejecutar comandos en tu sistema. Usa solo en entornos controlados.
+- 🛑 Si detienes el script con `Ctrl+Z`, deberás liberar el puerto con `kill %n` (ver [FAQ](#faq)).
+- 📋 Todos los logs quedan en `meshtastic_control.log`.
 
-## 📄 Licencia
+---
 
-Este proyecto está bajo licencia MIT. Úsalo bajo tu propio riesgo.
+## ❓ FAQ
+
+### 🔒 ¿Qué hago si me da error de puerto ocupado?
+1. Ejecuta `jobs` para ver procesos suspendidos.
+2. Libera el proceso con `kill %n` (donde `n` es el número del job).
+3. Si el puerto sigue ocupado, busca procesos Python y mátalos con `kill -9 PID`.
+
+### 🧩 ¿Cómo agrego más comandos permitidos?
+Edita el script y personaliza la función `on_receive` para filtrar o validar los comandos recibidos.
+
+---
+
