@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import glob
 import subprocess
 import meshtastic
 import meshtastic.serial_interface
@@ -6,6 +7,7 @@ from datetime import datetime
 import time
 import logging
 from pubsub import pub
+import serial
 
 # Configuración del logger
 logging.basicConfig(
@@ -17,6 +19,30 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger()
+
+def buscar_puerto_serial():
+    """Busca un puerto serial válido y retorna el primero que esté libre"""
+    posibles_puertos = glob.glob('/dev/ttyACM*') + glob.glob('/dev/ttyUSB*')
+    for puerto in posibles_puertos:
+        if not puerto_ocupado(puerto):
+            logger.info(f"Puerto detectado: {puerto}")
+            return puerto
+        else:
+            logger.warning(f"⚠️ Puerto {puerto} está ocupado.")
+    if posibles_puertos:
+        logger.error("Todos los puertos detectados están en uso. Finaliza los procesos que los ocupan antes de continuar.")
+    else:
+        logger.error("⚠️ No se detectaron dispositivos Meshtastic conectados (ttyUSB* o ttyACM*)")
+    return None
+
+def puerto_ocupado(puerto):
+    """Devuelve True si el puerto está ocupado, False si está libre"""
+    try:
+        s = serial.Serial(puerto)
+        s.close()
+        return False
+    except serial.SerialException:
+        return True
 
 def execute_command(command):
     """Ejecuta comandos en el sistema con manejo de errores"""
@@ -47,22 +73,22 @@ def on_receive(packet, interface):
 
 def main():
     interface = None
+    puerto = buscar_puerto_serial()
+    
+    if not puerto:
+        logger.error("No hay puertos disponibles para conectar. Saliendo...")
+        return  # Sale si no hay puerto disponible o si está ocupado
+
     try:
-        logger.info("Iniciando conexión Meshtastic...")
-        
-        # Conexión que mantiene funcionalidad inalámbrica
+        logger.info(f"Iniciando conexión Meshtastic en {puerto}...")
         interface = meshtastic.serial_interface.SerialInterface(
-            devPath="/dev/ttyUSB0",
-            noProto=False  # ← Permite operación paralela de radio y serial
+            devPath=puerto,
+            noProto=False
         )
-        
-        # Configura el handler de mensajes
         pub.subscribe(on_receive, "meshtastic.receive")
-        
         logger.info(f"\nConfiguración del nodo:\n{interface.nodes}\n")
         logger.info("Sistema listo. Envía comandos con formato: cmd:tu_comando")
 
-        # Mantiene el script activo
         while True:
             time.sleep(1)
 
